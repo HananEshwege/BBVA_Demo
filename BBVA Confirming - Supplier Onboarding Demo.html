@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BBVA · Confirming · Interactive Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --pb-blue:#004481; --pb-blue-d:#072146; --pb-green:#1B7A5A; --pb-text:#231f20; --pb-grey:#666; --pb-line:#c8cdd3; --pb-bg:#eff1f3; --link:#1973B8;
+  --j-blue:#1632C5; --j-teal:#1ED9D9; --chrome-text:#f1f3f7; --chrome-muted:#8a93a6;
+}
+html, body { height:100%; font-family:'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+body { background: radial-gradient(1200px 800px at 50% -10%, #2a2420 0%, #0d0d0d 60%); color:var(--chrome-text); display:flex; flex-direction:column; overflow:hidden; user-select:none; }
+
+/* ───── demo chrome ───── */
+.top { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 24px 6px; flex-shrink:0; }
+.top .brand { font-size:15px; font-weight:800; letter-spacing:-.2px; white-space:nowrap; }
+.top .brand span { color:var(--chrome-muted); font-weight:600; margin-left:6px; }
+.top .flow-title { font-size:13px; font-weight:700; color:#fff; text-align:center; flex:1; }
+.top .flow-title small { color:var(--chrome-muted); font-weight:600; margin-left:6px; }
+.top .right { display:flex; align-items:center; gap:14px; white-space:nowrap; }
+.counter { font-size:12px; color:var(--chrome-muted); font-variant-numeric:tabular-nums; }
+.counter b { color:#fff; }
+.toggle-notes { background:rgba(255,255,255,.08); color:#fff; border:none; border-radius:999px; padding:6px 12px; font:700 12px 'Nunito',sans-serif; cursor:pointer; }
+.toggle-notes:hover { background:rgba(255,255,255,.16); }
+
+.main { flex:1; display:grid; grid-template-columns:280px 1fr 300px; gap:8px; min-height:0; padding:0 18px; }
+body.notes-off .main { grid-template-columns:280px 1fr 0; }
+body.notes-off .notes { display:none; }
+
+.flavors { overflow-y:auto; padding:8px 4px 8px 6px; display:flex; flex-direction:column; gap:10px; }
+.flavors h4 { font-size:10px; letter-spacing:.14em; color:var(--chrome-muted); font-weight:800; padding:4px 2px 0; }
+.fl { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:12px 14px; cursor:pointer; transition:background .15s, border-color .15s; }
+.fl:hover { background:rgba(255,255,255,.09); }
+.fl.active { background:rgba(22,50,197,.28); border-color:var(--j-blue); }
+.fl .n { display:inline-flex; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:11px; font-weight:900; align-items:center; justify-content:center; margin-right:8px; }
+.fl.active .n { background:var(--j-blue); }
+.fl .t { font-size:13.5px; font-weight:800; color:#fff; display:inline; }
+.fl .d { font-size:11.5px; color:var(--chrome-muted); margin-top:6px; line-height:1.4; }
+.cfg { margin-top:10px; display:none; border-top:1px solid rgba(255,255,255,.08); padding-top:8px; }
+.fl.active .cfg { display:block; }
+.cfg div { display:flex; justify-content:space-between; gap:10px; font-size:11px; padding:3px 0; }
+.cfg div span:first-child { color:var(--chrome-muted); }
+.cfg div span:last-child { color:#fff; font-weight:700; text-align:right; }
+
+.stage { position:relative; display:flex; align-items:center; justify-content:center; min-height:0; padding:8px 58px; }
+.nav-btn { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,.08); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:5; transition:background .15s; }
+.nav-btn:hover { background:rgba(255,255,255,.16); }
+.nav-btn:disabled { opacity:.25; cursor:not-allowed; }
+.nav-btn.left { left:6px; } .nav-btn.right { right:6px; }
+.nav-btn svg { width:22px; height:22px; }
+
+.phone-fit { position:relative; flex-shrink:0; }
+.browser { width:900px; height:740px; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 50px 100px rgba(0,0,0,.55); display:flex; flex-direction:column; position:absolute; left:0; top:0; transform-origin:0 0; }
+.bchrome { height:38px; background:#e9ebee; display:flex; align-items:center; gap:8px; padding:0 14px; flex-shrink:0; }
+.bchrome i { width:11px; height:11px; border-radius:50%; display:block; }
+.bchrome .addr { flex:1; max-width:440px; margin:0 auto; height:24px; background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; color:#666; }
+.bchrome .addr svg { width:11px; height:11px; }
+.binner { flex:1; position:relative; color:var(--pb-text); background:#f4f5f6; }
+.site { height:60px; background:#fff; border-bottom:1px solid #e6e8eb; display:flex; align-items:center; gap:16px; padding:0 24px; flex-shrink:0; }
+.site .crumb { font-size:14px; color:#555; border-left:1px solid #ddd; padding-left:16px; }
+.site .r { margin-left:auto; font-size:13px; font-weight:700; color:#333; display:flex; gap:18px; align-items:center; }
+.dbody { flex:1; overflow-y:auto; padding:24px 24px; display:flex; gap:24px; justify-content:center; align-items:flex-start; background:#f4f5f6; }
+.dbody::-webkit-scrollbar { width:4px; } .dbody::-webkit-scrollbar-thumb { background:rgba(0,0,0,.18); border-radius:2px; }
+.dcard { flex:0 1 580px; min-width:0; background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); display:flex; flex-direction:column; min-height:560px; }
+.dcard.wide { flex-basis:900px; min-height:0; }
+.dcard .scroll { flex:1; padding:6px 22px 0; overflow:visible; }
+.dcard .cta-wrap { padding:14px 40px 24px; }
+.dback { padding:16px 22px 0; font-size:13px; font-weight:800; color:var(--link); cursor:pointer; display:flex; gap:4px; align-items:center; }
+.dback svg { width:14px; height:14px; }
+.daside { flex:0 0 230px; }
+.as-card { background:linear-gradient(135deg,#072146,#004481); color:#fff; border-radius:8px; padding:16px; }
+.as-l { font-size:12px; opacity:.85; font-weight:700; } .as-v { font-size:26px; font-weight:900; line-height:1.2; } .as-s { font-size:12px; opacity:.9; margin-top:2px; }
+.as-steps { background:#fff; border-radius:8px; margin-top:12px; padding:8px 14px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.as-steps div { display:flex; gap:10px; align-items:center; padding:7px 0; font-size:13.5px; color:#999; font-weight:700; }
+.as-steps span { width:22px; height:22px; border-radius:50%; border:1.5px solid #c8cdd3; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+.as-steps span svg { width:12px; height:12px; }
+.as-steps .on { color:var(--pb-text); } .as-steps .on span { border-color:var(--pb-blue); color:var(--pb-blue); }
+.as-steps .done { color:var(--pb-text); } .as-steps .done span { background:var(--pb-blue); border-color:var(--pb-blue); color:#fff; }
+.as-foot { display:flex; gap:6px; align-items:center; font-size:12px; color:#666; margin-top:12px; padding:0 4px; }
+.as-foot svg { width:14px; height:14px; }
+.wide .acct-card { margin:8px 22px; }
+.phone-fit .phone { position:absolute; left:0; top:0; transform-origin:0 0; }
+.phone { width:392px; height:820px; background:#0d0f14; border-radius:44px; padding:8px; box-shadow:0 50px 100px rgba(0,0,0,.55), 0 0 0 2px rgba(255,255,255,.04) inset; position:relative; }
+.phone .notch { position:absolute; top:14px; left:50%; transform:translateX(-50%); width:120px; height:28px; background:#0d0f14; border-radius:0 0 18px 18px; z-index:50; pointer-events:none; }
+.phone-inner { width:100%; height:100%; border-radius:36px; overflow:hidden; background:#fff; position:relative; color:var(--pb-text); }
+.screen { position:absolute; inset:0; display:flex; flex-direction:column; background:#fff; }
+.scroll { flex:1; overflow-y:auto; overflow-x:hidden; }
+.scroll::-webkit-scrollbar { width:4px; } .scroll::-webkit-scrollbar-thumb { background:rgba(0,0,0,.18); border-radius:2px; }
+
+.notes { overflow-y:auto; padding:8px 6px 8px 4px; }
+.note-card { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:16px; }
+.note-card .stage-lbl { font-size:10px; letter-spacing:.14em; color:var(--j-teal); font-weight:800; }
+.note-card h3 { font-size:16px; font-weight:800; color:#fff; margin:6px 0 12px; line-height:1.3; }
+.note-card .who-lbl { font-size:10px; letter-spacing:.14em; color:var(--chrome-muted); font-weight:800; margin-bottom:8px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; padding:5px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:#fff; }
+.chip i { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.note-card p { font-size:12.5px; line-height:1.55; color:#c9cdd6; }
+.legend { margin-top:12px; font-size:11px; color:var(--chrome-muted); line-height:1.5; padding:0 4px; }
+
+.strip { flex-shrink:0; padding:8px 18px 12px; display:flex; gap:6px; overflow-x:auto; align-items:center; justify-content:center; }
+.strip .grp { display:flex; align-items:center; gap:4px; }
+.strip .grp-lbl { font-size:9.5px; letter-spacing:.1em; font-weight:800; color:var(--chrome-muted); margin:0 4px 0 8px; text-transform:uppercase; white-space:nowrap; }
+.dot { width:24px; height:24px; border-radius:6px; background:rgba(255,255,255,.08); color:#c9cdd6; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+.dot:hover { background:rgba(255,255,255,.16); }
+.dot.active { background:var(--j-blue); color:#fff; }
+.hint { text-align:center; font-size:11px; color:var(--chrome-muted); padding-bottom:8px; flex-shrink:0; }
+.hint kbd { background:rgba(255,255,255,.08); border-radius:4px; padding:1px 6px; font-family:inherit; font-size:10px; color:#fff; }
+
+.main, body.notes-off .main { grid-template-columns:1fr !important; } .flavors, .notes, .toggle-notes { display:none !important; }
+@media (max-width:1180px) { .main { grid-template-columns:230px 1fr 250px; } }
+@media (max-width:700px) { .stage { padding:8px 4px; }  .nav-btn { width:36px; height:36px; } .top .brand span { display:none; } }
+@media (max-width:960px) { .main, body.notes-off .main { grid-template-columns:1fr; } .flavors, .notes { display:none; } .top .flow-title { display:none; } }
+
+/* ───── phone UI (BBVA) ───── */
+.status-bar { height:44px; padding:0 28px; display:flex; align-items:center; justify-content:space-between; font-size:15px; font-weight:800; color:#000; flex-shrink:0; }
+.status-bar .time { padding-top:4px; letter-spacing:-.3px; }
+.status-icons { display:flex; align-items:center; gap:5px; padding-top:4px; }
+.status-bar.dark { color:#fff; } .status-bar.dark svg path, .status-bar.dark svg rect { fill:#fff; } .status-bar.dark svg rect[stroke] { stroke:#fff; fill:none; }
+.url-bar { height:30px; margin:0 12px 4px; background:#f3f3f3; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; color:#666; flex-shrink:0; gap:6px; }
+.url-bar svg { width:11px; height:11px; }
+.nav-header { height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 18px; flex-shrink:0; border-bottom:1px solid #f1f1f1; background:#fff; }
+.nav-header .back-btn { background:none; border:none; cursor:pointer; padding:6px 4px; width:28px; color:var(--pb-text); }
+.nav-header .back-btn svg { width:18px; height:18px; }
+.nav-header .right-slot { font-size:14px; font-weight:700; min-width:28px; text-align:right; }
+.pb-logo-text { font-size:22px; font-weight:900; letter-spacing:1px; color:var(--pb-blue); }
+
+.pad { padding:0 18px; }
+.h-title { text-align:center; font-size:22px; font-weight:800; padding:18px 22px 6px; line-height:1.28; }
+.h-sub { text-align:center; font-size:14.5px; color:#444; padding:0 24px 16px; line-height:1.45; }
+.cta-btn { display:block; width:100%; height:50px; background:var(--pb-blue); color:#fff; font:800 14px 'Nunito',sans-serif; letter-spacing:.5px; text-transform:uppercase; border:none; border-radius:3px; cursor:pointer; }
+.cta-btn:hover { background:var(--pb-blue-d); }
+.cta-btn:disabled { background:#a9bdd0; cursor:not-allowed; }
+.cta-secondary { display:block; width:100%; text-align:center; background:none; border:none; color:var(--link); font:700 14px 'Nunito',sans-serif; text-decoration:underline; cursor:pointer; padding:14px 0 4px; }
+.cta-wrap { padding:14px 18px 22px; }
+.field { border:1px solid var(--pb-line); border-radius:4px; padding:8px 14px; min-height:54px; display:flex; flex-direction:column; justify-content:center; gap:2px; margin-bottom:10px; background:#fff; }
+.field .label { font-size:11.5px; font-weight:600; color:#888; display:flex; justify-content:space-between; gap:8px; }
+.field .label em { font-style:normal; font-size:10px; font-weight:800; color:var(--pb-green); letter-spacing:.04em; }
+.field .val { font-size:15.5px; font-weight:600; color:var(--pb-text); border:none; outline:none; background:none; font-family:inherit; width:100%; }
+.field.ro { background:#f4f5f6; }
+.field.fill { cursor:text; }
+.field.fill.empty .label { font-size:15.5px; }
+.field.fill.empty .val { display:none; }
+.otp-wrap { display:flex; gap:12px; justify-content:center; border:1px solid var(--pb-line); border-radius:4px; padding:16px; cursor:text; }
+.otp-d { width:34px; height:44px; border-bottom:2px solid #231f20; font-size:24px; font-weight:900; text-align:center; line-height:44px; }
+.row2 { display:flex; gap:10px; } .row2 .field { flex:1; min-width:0; }
+.sec-lbl { font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#555; margin:14px 0 8px; }
+.check-row { display:flex; gap:12px; align-items:flex-start; font-size:13px; line-height:1.45; color:#333; margin:10px 0; cursor:pointer; }
+.check-row a, .link { color:var(--link); text-decoration:underline; font-weight:700; cursor:pointer; }
+.checkbox { width:22px; height:22px; border-radius:3px; border:1.5px solid #999; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#fff; }
+.checkbox svg { display:none; width:12px; height:12px; color:#fff; }
+.check-row.checked .checkbox { background:var(--pb-blue); border-color:var(--pb-blue); }
+.check-row.checked .checkbox svg { display:block; }
+.note-sm { font-size:12px; color:#666; line-height:1.5; }
+.center { text-align:center; }
+
+/* portal */
+.promo-banner { background:#072146; color:#fff; border-radius:8px; margin:16px 16px 8px; padding:12px 14px; display:flex; gap:12px; align-items:center; cursor:pointer; box-shadow:0 0 0 0 rgba(25,115,184,.6); animation:pulse 2.2s infinite; }
+@keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(25,115,184,.55)} 70%{box-shadow:0 0 0 10px rgba(25,115,184,0)} 100%{box-shadow:0 0 0 0 rgba(25,115,184,0)} }
+.promo-banner svg { width:28px; height:28px; flex-shrink:0; }
+.promo-banner p { font-size:13px; line-height:1.4; }
+.promo-banner u { font-weight:800; }
+.acct-tabs { display:flex; padding:0 24px; border-bottom:1px solid #e0e0e0; }
+.acct-tabs div { flex:1; text-align:center; padding:13px 0; font-size:15px; position:relative; }
+.acct-tabs div.on { font-weight:800; } .acct-tabs div.on::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:#000; }
+.acct-group { padding:14px 18px 6px; display:flex; justify-content:space-between; font-size:16px; font-weight:800; }
+.acct-card { margin:8px 18px; border-top:2px solid var(--pb-blue); padding:14px 16px; display:flex; justify-content:space-between; align-items:flex-end; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.acct-card .name { font-size:14px; font-weight:700; } .acct-card .sub { font-size:12px; color:#777; } .acct-card .amt { font-size:16px; font-weight:700; }
+.tabbar { display:flex; justify-content:space-around; border-top:1px solid #eee; padding:8px 0 18px; flex-shrink:0; font-size:10.5px; color:#888; }
+.tabbar div { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.tabbar div.on { color:var(--pb-blue); font-weight:800; }
+.tabbar svg { width:20px; height:20px; }
+
+/* welcome */
+.web-hero { background:linear-gradient(160deg,#072146 0%, #004481 120%); color:#fff; padding:26px 22px 24px; }
+.web-hero .eyebrow { font-size:11px; letter-spacing:.14em; font-weight:800; opacity:.85; }
+.web-hero h1 { font-size:26px; line-height:1.2; font-weight:900; margin:8px 0 10px; }
+.web-hero p { font-size:14px; line-height:1.5; opacity:.95; }
+.stats { display:flex; gap:10px; padding:16px 18px 4px; }
+.stats div { flex:1; background:var(--pb-bg); border-radius:8px; padding:10px; text-align:center; }
+.stats b { display:block; font-size:18px; font-weight:900; color:var(--pb-blue); }
+.stats span { font-size:11px; color:#555; }
+.how { padding:10px 18px; }
+.how-row { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
+.how-row .num { width:26px; height:26px; border-radius:50%; background:var(--pb-blue); color:#fff; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.how-row b { font-size:14px; display:block; } .how-row span { font-size:12.5px; color:#555; line-height:1.45; }
+.perks { padding:0 22px; }
+.perk { display:flex; gap:12px; align-items:flex-start; padding:8px 0; font-size:13.5px; line-height:1.45; }
+.perk .ico { width:30px; height:30px; border-radius:50%; background:#1c1c1c; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.perk .ico svg { width:15px; height:15px; }
+.perk b { display:block; }
+
+/* loader */
+.loader-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; text-align:center; }
+.spinner { width:56px; height:56px; border-radius:50%; border:5px solid #e3eef8; border-top-color:var(--pb-blue); animation:spin 0.9s linear infinite; margin-bottom:22px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loader-wrap h2 { font-size:20px; font-weight:800; margin-bottom:8px; }
+.loader-steps { margin-top:18px; text-align:left; }
+.loader-steps div { font-size:13px; color:#555; padding:5px 0; display:flex; gap:8px; align-items:center; opacity:.35; transition:opacity .3s; }
+.loader-steps div.done { opacity:1; }
+.loader-steps svg { width:16px; height:16px; color:var(--pb-green); }
+
+/* summary + owners */
+.sum { margin:4px 18px; border:1px solid #e3e6ea; border-radius:6px; }
+.sum div { display:flex; justify-content:space-between; gap:12px; padding:10px 14px; font-size:13.5px; border-bottom:1px solid #eef0f2; }
+.sum div:last-child { border-bottom:none; }
+.sum div span:first-child { color:#555; white-space:nowrap; } .sum div span:last-child { font-weight:800; text-align:right; }
+.owner { display:flex; gap:12px; align-items:center; margin:8px 18px; border:1px solid #d9dde2; border-radius:6px; padding:12px 14px; }
+.owner .av { width:38px; height:38px; border-radius:50%; background:#e3f1fd; color:var(--pb-blue); font-weight:900; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.owner b { font-size:14px; display:block; } .owner span { font-size:12px; color:#666; }
+.owner .pct { margin-left:auto; font-size:18px; font-weight:900; color:var(--pb-blue); }
+.inv { cursor:pointer; align-items:center !important; gap:12px; }
+.inv .checkbox { margin-right:2px; }
+.inv.on .checkbox { background:var(--pb-blue); border-color:var(--pb-blue); } .inv.on .checkbox svg { display:block; }
+.inv:not(.on) { border-top-color:#c8cdd3; } .inv:not(.on) .amt, .inv:not(.on) .name { color:#888; }
+.sel-bar { display:flex; justify-content:space-between; align-items:center; padding:10px 18px 0; font-size:13px; color:#555; }
+.sel-bar b { color:var(--pb-text); font-size:15px; }
+.box-hd { display:flex; justify-content:space-between; align-items:baseline; }
+.box-hd .link { font-size:13px; text-transform:none; letter-spacing:0; }
+.field.ed:not(.ro) { border-color:var(--link); box-shadow:0 0 0 2px rgba(25,115,184,.12); }
+[data-edit-box] .editv { display:none; } [data-edit-box].editing .editv { display:block; } [data-edit-box].editing .view { display:none; }
+.tag { display:inline-block; font-size:10px; font-weight:900; letter-spacing:.05em; padding:2px 7px; border-radius:4px; background:#e6f4ec; color:var(--pb-green); margin-left:6px; vertical-align:middle; }
+
+/* agreement */
+.agreement-preview { margin:6px 18px; height:170px; border:1px solid #9ec9ee; overflow:hidden; border-radius:3px; background:#fff; padding:16px 18px; position:relative; }
+.agreement-preview .ttl { font-size:11px; font-weight:900; letter-spacing:.08em; color:var(--pb-blue); margin-bottom:10px; }
+.agreement-preview .ln { height:7px; border-radius:3px; background:#e6e9ed; margin:7px 0; }
+.agreement-preview .fade { position:absolute; left:0; right:0; bottom:0; height:60px; background:linear-gradient(transparent,#fff); }
+
+/* IDV */
+.idv-steps { margin:8px 18px; }
+.idv-step { display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0; font-size:14px; }
+.idv-step .ico { width:38px; height:38px; border-radius:10px; background:var(--pb-bg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.idv-step .ico svg { width:20px; height:20px; color:var(--pb-text); }
+.camera { margin:10px 18px; height:420px; border-radius:14px; background:#1b1f27; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.id-frame { width:270px; height:170px; border:3px solid #fff; border-radius:14px; position:relative; background:linear-gradient(135deg,#dfe7ef,#f6f8fb); box-shadow:0 0 0 999px rgba(0,0,0,.45); }
+.id-frame .photo { position:absolute; left:14px; top:30px; width:66px; height:84px; border-radius:6px; background:#c3ccd6; }
+.id-frame .ln { position:absolute; left:94px; height:9px; border-radius:4px; background:#c3ccd6; }
+.id-frame .hdr { position:absolute; left:14px; top:10px; font-size:10px; font-weight:900; letter-spacing:.1em; color:#54606e; }
+.cam-cap { position:absolute; bottom:18px; left:0; right:0; text-align:center; color:#fff; font-size:13px; font-weight:700; }
+.shutter { position:absolute; bottom:48px; left:50%; transform:translateX(-50%); width:62px; height:62px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,.4); background-clip:padding-box; cursor:pointer; }
+.selfie-wrap { width:230px; height:300px; border-radius:50%; overflow:hidden; border:4px solid #fff; box-shadow:0 0 0 999px rgba(0,0,0,.5); background:linear-gradient(180deg,#5d6b7c,#2d3540); display:flex; align-items:flex-end; justify-content:center; }
+.selfie-wrap img { width:100%; height:100%; object-fit:cover; }
+.verified { display:flex; gap:8px; align-items:center; margin:8px 18px; padding:10px 12px; border-radius:6px; background:#e6f4ec; color:var(--pb-green); font-size:13px; font-weight:800; }
+.verified svg { width:16px; height:16px; flex-shrink:0; }
+.big-check { width:72px; height:72px; border-radius:50%; background:var(--pb-green); color:#fff; display:flex; align-items:center; justify-content:center; margin:40px auto 16px; }
+.big-check svg { width:36px; height:36px; }
+
+/* invoices */
+.ssp-head { background:linear-gradient(135deg,#072146,#004481); color:#fff; margin:12px 16px 6px; border-radius:12px; padding:16px; }
+.ssp-head .l { font-size:12px; font-weight:700; opacity:.9; }
+.ssp-head .v { font-size:30px; font-weight:900; line-height:1.15; }
+.ssp-head .s { font-size:12px; opacity:.92; margin-top:6px; }
+.ssp-sec { font-size:13px; font-weight:900; margin:14px 18px 6px; display:flex; justify-content:space-between; }
+.tx { display:flex; justify-content:space-between; align-items:center; margin:0 18px; padding:11px 0; border-bottom:1px solid #eef0f2; font-size:13.5px; }
+.tx .l b { display:block; font-size:14px; } .tx .l span { font-size:12px; color:#666; }
+.tx .r { text-align:right; } .tx .r b { display:block; font-size:14.5px; }
+.pill { display:inline-block; font-size:10.5px; font-weight:900; padding:3px 8px; border-radius:999px; }
+.pill.warn { background:#fff1d6; color:#8a5a00; } .pill.ok { background:#e6f4ec; color:var(--pb-green); } .pill.grey { background:#eef0f2; color:#555; } .pill.blue { background:#e3f1fd; color:var(--pb-blue); }
+.banner-info { margin:10px 18px; padding:10px 12px; border-radius:6px; background:#e3f1fd; color:#0b4f86; font-size:12.5px; line-height:1.45; }
+.main, body.notes-off .main { grid-template-columns:1fr !important; } .flavors, .notes, .toggle-notes { display:none !important; }
+.ovl { position:absolute; inset:0; background:rgba(10,14,22,.72); display:flex; align-items:center; justify-content:center; z-index:10; }
+.mphone { width:300px; height:610px; background:#0d0f14; border-radius:38px; padding:7px; box-shadow:0 30px 60px rgba(0,0,0,.5); position:relative; }
+.mphone .mnotch { position:absolute; top:12px; left:50%; transform:translateX(-50%); width:96px; height:22px; background:#0d0f14; border-radius:0 0 14px 14px; z-index:5; }
+.mphone .mscr { width:100%; height:100%; border-radius:31px; overflow:hidden; background:#1b1f27; display:flex; flex-direction:column; position:relative; color:#fff; }
+.mphone .mscr.light { background:#fff; color:var(--pb-text); }
+.mphone .mtop { padding:40px 16px 6px; text-align:center; }
+.mphone .mtop b { display:block; font-size:16px; font-weight:800; } .mphone .mtop span { font-size:12px; color:#c9cdd6; }
+.mphone .mlogo { text-align:center; font-weight:900; color:var(--pb-blue); font-size:18px; letter-spacing:1px; padding:38px 0 0; }
+.mphone .mcam { flex:1; position:relative; display:flex; align-items:center; justify-content:center; }
+.mphone .id-frame { transform:scale(.8); margin-top:-60px; }
+.mphone .selfie-wrap { width:170px; height:220px; margin-top:-60px; }
+.mphone .shutter { bottom:44px; width:56px; height:56px; }
+.mphone .cam-cap { bottom:16px; font-size:12px; }
+.qr-row { display:flex; gap:22px; align-items:center; margin:6px 18px 4px; padding:18px; border:1px solid #e3e6ea; border-radius:8px; }
+.qr { width:150px; height:150px; flex-shrink:0; cursor:pointer; padding:8px; border:1px solid #e3e6ea; border-radius:6px; background:#fff; }
+.qr svg { width:100%; height:100%; display:block; }
+.qr-steps div { display:flex; gap:10px; align-items:flex-start; font-size:13.5px; padding:5px 0; }
+.qr-steps .n { width:22px; height:22px; border-radius:50%; background:var(--pb-blue); color:#fff; font-size:11px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.wait { display:flex; gap:10px; align-items:center; justify-content:center; margin:14px 18px 6px; padding:11px 14px; border-radius:6px; background:#e3f1fd; color:#0b4f86; font-size:13px; font-weight:800; }
+.wait.ok { background:#e6f4ec; color:var(--pb-green); }
+.wait .sp { width:16px; height:16px; border-radius:50%; border:2.5px solid #b9d6ee; border-top-color:var(--pb-blue); animation:spin .9s linear infinite; }
+.wait svg { width:16px; height:16px; }
+.drop { margin:6px 18px 10px; border:1.5px dashed #b7c3cf; border-radius:8px; padding:18px; text-align:center; font-size:13.5px; color:#555; cursor:pointer; background:#fafbfc; }
+.drop:hover { border-color:var(--pb-blue); background:#f2f7fc; }
+.drop b { color:var(--link); text-decoration:underline; }
+.doc-row { display:flex; gap:12px; align-items:center; margin:8px 18px; border:1px solid #d9dde2; border-radius:6px; padding:12px 14px; }
+.doc-row .ico { width:36px; height:36px; border-radius:8px; background:var(--pb-bg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.doc-row .ico svg { width:18px; height:18px; }
+.doc-row b { font-size:14px; display:block; } .doc-row .note-sm { font-size:12px; }
+.doc-row .act { margin-left:auto; flex-shrink:0; }
+.up-btn { font:800 12px 'Nunito',sans-serif; color:var(--pb-blue); background:#fff; border:1.5px solid var(--pb-blue); border-radius:4px; padding:7px 12px; cursor:pointer; }
+.up-btn:hover { background:#f2f7fc; }
+.file-chip { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:800; color:var(--pb-green); background:#e6f4ec; border-radius:999px; padding:5px 10px; }
+.file-chip svg { width:12px; height:12px; }
+.req-tag { font-size:10px; font-weight:900; letter-spacing:.05em; color:#8a5a00; background:#fff1d6; border-radius:4px; padding:1px 6px; margin-left:6px; }
+.opt-tag { font-size:10px; font-weight:900; letter-spacing:.05em; color:#555; background:#eef0f2; border-radius:4px; padding:1px 6px; margin-left:6px; }
+.esg { margin:6px 18px 4px; border:1px solid #cfd5dc; border-radius:8px; overflow:hidden; }
+.esg-bar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f3f5f7; border-bottom:1px solid #e3e6ea; font-size:13px; font-weight:800; }
+.esg-bar .pg { color:#666; font-weight:700; margin-left:auto; font-size:12px; }
+.esg-fin { font:800 12px 'Nunito',sans-serif; color:#fff; background:var(--pb-blue); border:none; border-radius:4px; padding:7px 14px; cursor:pointer; }
+.esg-fin:disabled { background:#a9bdd0; cursor:not-allowed; }
+.esg-page { background:#e9ecef; padding:16px; }
+.esg-doc { background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.12); padding:18px 20px; }
+.esg-doc .ttl { font-size:11px; font-weight:900; letter-spacing:.08em; color:var(--pb-blue); margin-bottom:8px; }
+.esg-doc .ln { height:6px; border-radius:3px; background:#e6e9ed; margin:6px 0; }
+.sig-area { display:flex; gap:20px; align-items:flex-end; margin-top:16px; }
+.sig-box { flex:1; border-bottom:1.5px solid #333; height:52px; position:relative; display:flex; align-items:flex-end; }
+.sig-lbl { font-size:10.5px; color:#777; margin-top:4px; }
+.sign-flag { position:absolute; left:-6px; bottom:8px; background:#ffcc33; color:#222; font:900 12px 'Nunito',sans-serif; border:none; padding:7px 16px 7px 12px; cursor:pointer; clip-path:polygon(0 0,86% 0,100% 50%,86% 100%,0 100%); animation:pulse2 1.6s infinite; }
+@keyframes pulse2 { 50% { filter:brightness(1.08); transform:translateX(3px); } }
+.sig-script { font-family:'Segoe Script','Brush Script MT','Lucida Handwriting',cursive; font-size:26px; color:#0b2a6b; line-height:1; padding-bottom:4px; }
+.esg-foot { display:flex; gap:6px; align-items:center; justify-content:center; font-size:11.5px; color:#666; padding:8px; border-top:1px solid #e3e6ea; background:#fff; }
+.esg-foot svg { width:12px; height:12px; }
+.ubo { margin:10px 18px; border:1px solid #d9dde2; border-radius:8px; }
+.ubo-hd { display:flex; gap:12px; align-items:center; padding:12px 14px; border-bottom:1px solid #eef0f2; }
+.ubo-hd .av { width:36px; height:36px; border-radius:50%; background:#e3f1fd; color:var(--pb-blue); font-weight:900; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ubo-hd b { font-size:14px; display:block; } .ubo-hd span.s { font-size:12px; color:#666; }
+.ubo-hd .pct { margin-left:auto; font-size:17px; font-weight:900; color:var(--pb-blue); }
+.ubo-bd { padding:12px 14px 4px; }
+.ubo-bd .field { min-height:48px; padding:6px 12px; margin-bottom:8px; }
+.ubo-bd .field .val { font-size:14px; }
+.ubo-bd .field.fill.empty .label { font-size:14px; }
+.seg { display:flex; border:1px solid var(--pb-line); border-radius:4px; overflow:hidden; margin:4px 0 10px; }
+.seg div { flex:1; text-align:center; padding:10px 6px; font-size:12.5px; font-weight:700; color:#555; cursor:pointer; line-height:1.3; }
+.seg div.on { background:var(--pb-text); color:#fff; }
+.ubo-tag { font-size:10px; font-weight:900; letter-spacing:.05em; padding:2px 7px; border-radius:4px; margin-left:6px; vertical-align:middle; }
+.ubo-tag.ok { background:#e6f4ec; color:var(--pb-green); } .ubo-tag.todo { background:#fff1d6; color:#8a5a00; }
+.pick { display:flex; gap:12px; align-items:center; margin:8px 18px; border:1px solid #d9dde2; border-radius:8px; padding:14px; cursor:pointer; transition:border-color .15s, background .15s; }
+.pick:hover { border-color:#9ab; }
+.pick.on { border:2px solid var(--pb-blue); background:#f2f7fc; padding:13px; }
+.pick .rad { width:20px; height:20px; border-radius:50%; border:2px solid #999; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.pick.on .rad { border-color:var(--pb-blue); } .pick.on .rad::after { content:''; width:10px; height:10px; border-radius:50%; background:var(--pb-blue); }
+.pick .av { width:38px; height:38px; border-radius:50%; background:#e3f1fd; color:var(--pb-blue); font-weight:900; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pick b { font-size:14.5px; display:block; } .pick span.s { font-size:12px; color:#666; }
+.pick .pct { margin-left:auto; font-size:17px; font-weight:900; color:var(--pb-blue); }
+.mail-hd { padding:40px 16px 10px; border-bottom:1px solid #eee; font-size:12px; color:#666; }
+.mail-hd b { display:block; font-size:15px; color:var(--pb-text); margin-top:6px; line-height:1.3; }
+.mail-bd { padding:14px 16px; font-size:13px; line-height:1.5; color:#333; }
+.mail-bd .btn { display:block; text-align:center; background:var(--pb-blue); color:#fff; font-weight:800; border-radius:3px; padding:11px; margin:14px 0 10px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Jifiti × BBVA<span>Confirming · interactive flow</span></div>
+  <div class="flow-title" id="flowTitle"></div>
+  <div class="right">
+    <div class="counter"><b id="curIdx">1</b> / <span id="totIdx">1</span></div>
+    <button class="toggle-notes" id="notesBtn" onclick="toggleNotes()">Hide notes</button>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="flavors" id="flavors"><h4>USE CASE</h4></aside>
+  <div class="stage">
+    <button class="nav-btn left" id="prevBtn" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="phone-fit" id="phoneFit"><div class="browser" id="phoneBox"><div class="bchrome"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="addr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>BBVA Confirming</div></div><div class="binner" id="phone"></div></div></div>
+    <button class="nav-btn right" id="nextBtn" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+  </div>
+  <aside class="notes">
+    <div class="note-card">
+      <div class="stage-lbl" id="nStage"></div>
+      <h3 id="nTitle"></h3>
+      <div class="who-lbl">BEHIND THIS SCREEN</div>
+      <div class="chips" id="nWho"></div>
+      <p id="nText"></p>
+    </div>
+    <div class="legend">Illustrative demo for BBVA. Sample data only.</div>
+  </aside>
+</div>
+
+<div class="strip" id="strip"></div>
+<div class="hint">Click through the screen, or use <kbd>←</kbd> <kbd>→</kbd> · Illustrative demo for BBVA. Sample data only.</div>
+
+<script>
+/* ═════════ assets ═════════ */
+const IMG = { selfie: "data:image/jpeg;base64,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" };
+
+/* ═════════ roles ═════════ */
+const P = {
+  jifiti: { n:'Supplier journey', c:'#1632C5' },
+  bank:   { n:'BBVA', c:'#8a93a6' },
+  kyb:    { n:'Business data (KYB)', c:'#1ED9D9' },
+  idv:    { n:'Identity verification', c:'#1ED9D9' },
+  vop:    { n:'Account verification', c:'#1ED9D9' },
+  aml:    { n:'AML screening', c:'#1ED9D9' },
+  esign:  { n:'eSign', c:'#1ED9D9' },
+};
+
+/* ═════════ helpers ═════════ */
+const ICON = {
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>',
+  bank:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-7M15 21v-7"/></svg>',
+  id:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2.5"/><path d="M13 10h6M13 14h4"/></svg>',
+  face:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg>',
+  euro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 6.5A7 7 0 1017 17.5M4 10h9M4 14h9"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+};
+const STATUS = (dark) => `<div class="status-bar${dark?' dark':''}"><span class="time">9:41</span><div class="status-icons">
+  <svg width="17" height="10" viewBox="0 0 17 10"><path d="M0 8.5h2.5v1H0zM4 6h2.5v3.5H4zM8 3.5h2.5V9.5H8zM12 1h2.5v8.5H12z" fill="#000"/></svg>
+  <svg width="16" height="10" viewBox="0 0 16 10"><path d="M8 1.5C10.8 1.5 13.3 2.7 15 4.7L16 3.5C14 1.1 11.2-.5 8-.5 4.8-.5 2 1.1 0 3.5L1 4.7C2.7 2.7 5.2 1.5 8 1.5Z" fill="#000"/><circle cx="8" cy="9" r="1.2" fill="#000"/></svg>
+  <svg width="25" height="11" viewBox="0 0 25 11"><rect x=".5" y=".5" width="21" height="10" rx="2.5" stroke="#000" stroke-opacity=".35" fill="none"/><rect x="2" y="2" width="18" height="7" rx="1.5" fill="#000"/><rect x="22" y="3.5" width="2" height="4" rx=".5" fill="#000" fill-opacity=".4"/></svg>
+</div></div>`;
+const LOGO = `<div class="pb-logo-text">BBVA</div>`;
+const HEADER = (back=true, right='ES') => `<div class="nav-header"><button class="back-btn" onclick="prev()" style="${back?'':'visibility:hidden'}">${ICON.back}</button>${LOGO}<div class="right-slot">${right}</div></div>`;
+const URL = (u) => `<div class="url-bar">${ICON.lock}${u}</div>`;
+const WEB = (back=true) => back ? 'WEB1' : 'WEB0';
+const chk = (txt, req=true) => `<div class="check-row${req?' req':''}" onclick="toggleCheck(this)"><div class="checkbox">${ICON.check}</div><div>${txt}</div></div>`;
+const cta = (label, opts={}) => `<div class="cta-wrap"><button class="cta-btn" ${opts.gate?'data-gate="1" disabled':''} onclick="${opts.onclick||'next()'}">${label}</button>${opts.secondary?`<button class="cta-secondary" onclick="${opts.secondaryClick||'next()'}">${opts.secondary}</button>`:''}</div>`;
+const field = (label, val, cls='') => `<div class="field ${cls}"><div class="label">${label}</div><input class="val" value="${val}" readonly></div>`;
+const fieldEd = (label, val) => `<div class="field ro ed"><div class="label">${label}</div><input class="val" value="${val}" readonly></div>`;
+const fillField = (label, demo) => `<div class="field fill empty" onclick="fillIn(this)" data-demo="${demo}"><div class="label">${label}</div><input class="val" value="" placeholder="" readonly></div>`;
+const SITE = `<div class="site"><div class="pb-logo-text">BBVA</div><div class="crumb">Confirming · Supplier portal</div><div class="r"><span>Talleres Ebro S.L.</span><span>ES</span></div></div>`;
+function aside() {
+  const stages = ['Business','Identity','Documents','Payout','Checks','Agreement'];
+  const cur = FLOW[CUR] ? FLOW[CUR].stage : ''; const all = cur==='Activation'; const ci = stages.indexOf(cur);
+  return `<div class="daside"><div class="as-card"><div class="as-l">Early payment</div><div class="as-v">${eur(selTotal())}</div><div class="as-s">${selCount()} ${invWord()} · Grupo Meridia Retail S.A.</div></div>
+    <div class="as-steps">${stages.map((st,i)=>{ const d = all || i<ci, on = i===ci; return `<div class="${d?'done':on?'on':''}"><span>${d?ICON.check:i+1}</span>${st}</div>`; }).join('')}</div>
+    <div class="as-foot">${ICON.shield}Secure session</div></div>`;
+}
+const wrap = (chrome, body, extra='', ovl='') => {
+  const wide = chrome==='WIDE', back = chrome==='WEB1';
+  return `<div class="screen" style="background:#f4f5f6">${SITE}<div class="dbody"><div class="dcard${wide?' wide':''}">${back?`<div class="dback" onclick="prev()">${ICON.back}Back</div>`:''}<div class="scroll">${body}</div>${extra}</div>${wide?'':aside()}</div>${ovl}</div>`;
+};
+const INVOICES = [['INV-2026-0418','Due 14 Jan 2027',18400],['INV-2026-0433','Due 28 Jan 2027',21150],['INV-2026-0451','Due 11 Feb 2027',8700]];
+let ST = { me:null, invited:false, uboMethod:'link', sel:[true,true,true], docs:{deeds:false, poa:false, own:false}, signed:false };
+const eur = n => '€' + n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const selTotal = () => INVOICES.reduce((t,v,i)=>t+(ST.sel[i]?v[2]:0),0);
+const selCount = () => ST.sel.filter(Boolean).length;
+const invWord = () => selCount()===1 ? 'invoice' : 'invoices';
+
+const QR = (() => { const n=25, c=[]; let x=7;
+  const rnd=()=>{ x=(x*1103515245+12345)&0x7fffffff; return x/0x7fffffff; };
+  const finder=(r,cc)=>r<7&&cc<7||r<7&&cc>=n-7||r>=n-7&&cc<7;
+  for(let r=0;r<n;r++) for(let k=0;k<n;k++){ if(finder(r,k)) continue; if(rnd()>.52) c.push(`<rect x="${k}" y="${r}" width="1" height="1"/>`); }
+  const fp=(X,Y)=>`<rect x="${X}" y="${Y}" width="7" height="7"/><rect x="${X+1}" y="${Y+1}" width="5" height="5" fill="#fff"/><rect x="${X+2}" y="${Y+2}" width="3" height="3"/>`;
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" fill="#111">${c.join('')}${fp(0,0)}${fp(n-7,0)}${fp(0,n-7)}</svg>`; })();
+const PHONE = (inner, light=false) => `<div class="ovl"><div class="mphone"><div class="mnotch"></div><div class="mscr${light?' light':''}">${inner}</div></div></div>`;
+function idvDesk(connected) {
+  return `<div class="h-title">Verify your identity on your phone</div><div class="h-sub">Lucía Martín Gil · Sole director <span class="tag">POWERS CONFIRMED</span></div>
+   <div class="qr-row"><div class="qr" onclick="next()" title="Scan with your phone">${QR}</div>
+    <div class="qr-steps"><div><span class="n">1</span><span>Scan this QR code with your phone camera</span></div>
+     <div><span class="n">2</span><span>Scan your DNI or NIE</span></div>
+     <div><span class="n">3</span><span>Take a quick selfie</span></div>
+     <div><span class="n">4</span><span>Come back here. This page updates automatically.</span></div></div></div>
+   ${connected?`<div class="wait ok">${ICON.check}Phone connected. Continue on your phone.</div>`:`<div class="wait"><span class="sp"></span>Waiting for your phone…</div>`}
+   <div class="center note-sm" style="margin:6px 0 16px">Can’t scan? <span class="link">Text me the link</span></div>`;
+}
+
+/* ═════════ use case ═════════ */
+const FLAVORS = [
+  { key:'c1', name:'Confirming early payment', who:'Non-BBVA suppliers', short:'Supplier onboards digitally and gets paid early on confirmed invoices.',
+    cfg:[['Customer','Supplier, not a BBVA client'],['Entry point','BBVA Confirming portal'],['Market','Spain (LATAM next)'],['Business data','Prefilled from tax ID'],['Owners','Over 25%, declared'],['Identity','DNI/NIE + selfie'],['Payout','Any SEPA account'],['Account check','Verification of Payee'],['Signature','eSign (e.g. DocuSign)'],['Outcome','Early payment enabled']] },
+];
+
+/* ═════════ screens ═════════ */
+const S = {};
+
+S.portal = () => ({ stage:'Entry', title:'BBVA Confirming portal', who:['bank'],
+  note:'The supplier sees invoices its buyer has confirmed in BBVA’s Confirming portal and picks which ones to get paid early. The selection is passed to Jifiti when the onboarding session opens.',
+  html: () => wrap('WIDE',
+    `<div class="promo-banner" style="animation:none;cursor:default"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 4.2 4.2 1.8-4.2 1.8L12 15l-1.8-4.2-4.2-1.8 4.2-1.8z" fill="#ffd54f"/><path d="M19 13l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" fill="#5BBEFF"/></svg>
+      <p>Get paid now instead of waiting for the due date. Select the invoices you want paid early below.</p></div>
+     <div class="acct-tabs"><div class="on">Invoices</div><div>Payments</div></div>
+     <div class="acct-group"><span>Grupo Meridia Retail S.A.</span><span class="link" style="font-size:13px" onclick="selAll()">${selCount()===INVOICES.length?'Clear all':'Select all'}</span></div>
+     ${INVOICES.map(([n,d,a],i)=>`<div class="acct-card inv${ST.sel[i]?' on':''}" onclick="toggleInv(${i})"><div class="checkbox">${ICON.check}</div><div style="flex:1"><div class="name">${n}</div><div class="sub" style="margin-top:4px">${d}</div></div><div style="text-align:right"><div class="amt">${eur(a)}</div><span class="pill grey">CONFIRMED</span></div></div>`).join('')}
+     <div class="sel-bar"><span>${selCount()} of ${INVOICES.length} selected</span><b>${eur(selTotal())}</b></div>`,
+    `<div class="cta-wrap" style="padding-top:8px;display:flex;justify-content:flex-end"><button class="cta-btn" style="width:340px" ${selCount()?'':'disabled'} onclick="next()">Get paid early · ${eur(selTotal())}</button></div>`) });
+
+S.welcome = () => ({ stage:'Entry', title:'Early payment: how it works', who:['jifiti'],
+  note:'White-label Jifiti journey under the BBVA brand. The supplier does not need to be, or become, a BBVA client. Program, buyer and invoices are passed in by BBVA.',
+  html: () => wrap(WEB(),
+    `<div class="web-hero"><div class="eyebrow">CONFIRMING · EARLY PAYMENT</div><h1>Get paid early on your confirmed invoices</h1><p>Set it up once. You don’t need to be a BBVA customer.</p></div>
+     <div class="stats"><div><b>${selCount()}</b><span>${invWord()}</span></div><div><b>€${(selTotal()/1000).toFixed(1)}K</b><span>to get early</span></div><div><b>SEPA</b><span>any account</span></div></div>
+     <div class="how"><div class="how-row"><div class="num">1</div><div><b>Confirm your business</b><span>We fill in most of your details for you.</span></div></div>
+      <div class="how-row"><div class="num">2</div><div><b>Verify your identity</b><span>Scan your DNI or NIE and take a selfie.</span></div></div>
+      <div class="how-row"><div class="num">3</div><div><b>Sign and get paid</b><span>Sign electronically. Funds go to your account.</span></div></div></div>`,
+    cta('Get started')) });
+
+S.taxId = () => ({ stage:'Business', title:'Tax ID and consent', who:['jifiti'],
+  note:'One identifier starts the flow. The NIF format tells us if this is a company or a sole trader, which changes the next steps. Consent covers registry lookups and compliance checks.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">Start with your tax ID</div><div class="h-sub">Have your DNI or NIE and the IBAN where you want to be paid.</div>
+     <div class="pad">${fillField('Business tax ID (NIF)','B50123456')}
+      ${chk('I authorize BBVA to retrieve my business data and run identity and compliance checks.')}</div>`,
+    cta('Find my business', { gate:true })) });
+
+S.lookup = () => ({ stage:'Business', title:'Registry lookup', who:['kyb'], auto:2400,
+  note:'Business details, directors and owners are retrieved automatically from the tax ID. Anything not found goes to manual entry.',
+  html: () => wrap(WEB(false),
+    `<div class="loader-wrap" style="min-height:440px"><div class="spinner"></div><h2>Finding your business</h2><div class="note-sm">This only takes a few seconds.</div>
+     <div class="loader-steps">${['Validating your tax ID','Retrieving your business details','Retrieving directors and owners'].map((s,i)=>`<div data-step="${i}">${ICON.check}${s}</div>`).join('')}</div></div>`) });
+
+S.company = () => ({ stage:'Business', title:'Business details, prefilled', who:['jifiti','kyb'],
+  note:'Prefilled automatically from the tax ID. The supplier confirms or edits anything that is wrong. Edited fields are flagged for review in the onboarding file.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">We found your business</div><div class="h-sub">Please check your details. Tap Edit if anything is wrong.</div>
+     <div class="pad" data-edit-box><div class="sec-lbl box-hd" style="margin-top:0"><span>Business details</span><span class="link" onclick="toggleEdit(this)">Edit</span></div>
+      ${fieldEd('Legal name','Talleres Ebro S.L.')}${fieldEd('Tax ID (NIF)','B50123456')}
+      ${fieldEd('Registered address','Calle del Coso 120, 50001 Zaragoza')}
+      <div class="row2">${fieldEd('Legal form','S.L.')}${fieldEd('Status','Active')}</div></div>
+`,
+    cta('Confirm details')) });
+
+S.owners = () => ({ stage:'Business', title:'Owners: select yourself', who:['jifiti','kyb'],
+  note:'The owners above 25% are shown from the business lookup. The person filling in the form picks themselves, so their details can be prefilled and they become the applicant and signer. Every other owner gets an invitation by email.',
+  html: () => { const O=[['lm','LM','Lucía Martín Gil','Shareholder, sole director','60%'],['jr','JR','Javier Ruiz Ortega','Shareholder','40%']];
+    return wrap(WEB(),
+    `<div class="h-title">Who are you?</div><div class="h-sub">These are the owners of Talleres Ebro S.L. Select yourself to continue.</div>
+     ${O.map(([k,a,n,r,p])=>`<div class="pick${ST.me===k?' on':''}" onclick="pickMe('${k}')"><div class="rad"></div><div class="av">${a}</div><div><b>${n}</b><span class="s">${r}</span></div><div class="pct">${p}</div></div>`).join('')}
+     <div class="center note-sm" style="margin:10px 0 4px">Not listed? <span class="link">I’m an authorized representative</span> · <span class="link">An owner is missing</span></div>`,
+    `<div class="cta-wrap"><button class="cta-btn" ${ST.me?'':'disabled'} onclick="next()">This is me</button></div>`); } });
+
+S.personal = () => ({ stage:'Business', title:'Your personal details', who:['jifiti'],
+  note:'Name and role come from the business lookup. The applicant adds date of birth, nationality, ID number, address, email and mobile. The mobile is verified next by one-time code.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">Your details</div><div class="h-sub">Lucía Martín Gil · Shareholder 60%, sole director</div>
+     <div class="pad grpfill">${field('Full name','Lucía Martín Gil','ro')}
+      <div class="row2">${fillField('Date of birth','12/03/1979')}${fillField('Nationality','Spanish')}</div>
+      ${fillField('DNI / NIE / Passport','DNI 12345678Z')}
+      ${fillField('Residential address','Paseo de la Independencia 24, 50004 Zaragoza')}
+      <div class="row2">${fillField('Email','lucia@talleresebro.es')}${fillField('Mobile','+34 612 345 412')}</div></div>`,
+    cta('Continue', { gate:true })) });
+
+S.otp = () => ({ stage:'Identity', title:'Verify mobile (OTP)', who:['jifiti'],
+  note:'One-time code confirms the applicant controls the mobile number. The same number receives the identity verification link if the QR can’t be scanned.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">Verify your mobile</div><div class="h-sub">Enter the code we sent to +34 6•• ••• 412.</div>
+     <div class="pad"><div class="otp-wrap" onclick="fillIn(this)">${['4','8','2','1','9','3'].map(d=>`<div class="otp-d" data-demo="${d}"></div>`).join('')}</div>
+     <div class="center note-sm" style="margin:12px 0 4px">Didn’t get a code? <span class="link">Resend</span></div></div>`,
+    cta('Verify', { gate:true })) });
+
+S.docs = () => ({ stage:'Documents', title:'Upload documents', who:['jifiti','kyb'],
+  note:'Supporting documents are requested only where needed. Company deeds are required, the others depend on the case. Files are checked and attached to the onboarding file sent to BBVA.',
+  html: () => { const D=ST.docs;
+    const row=(k,t,sub,req,file)=>`<div class="doc-row"><div class="ico">${ICON.doc}</div><div><b>${t}${req?'<span class="req-tag">REQUIRED</span>':'<span class="opt-tag">IF APPLICABLE</span>'}</b><div class="note-sm">${sub}</div></div><div class="act">${D[k]?`<span class="file-chip">${ICON.check}${file}</span>`:`<button class="up-btn" onclick="upDoc('${k}')">Upload</button>`}</div></div>`;
+    return wrap(WEB(),
+    `<div class="h-title">Upload documents</div><div class="h-sub">A couple of documents to complete your business file.</div>
+     <div class="drop" onclick="upDoc('all')">Drag and drop files here, or <b>browse</b><div class="note-sm" style="margin-top:4px">PDF, JPG or PNG · up to 10 MB each</div></div>
+     ${row('deeds','Company deeds (escrituras)','Incorporation deed and latest amendments',true,'escrituras_talleres_ebro.pdf')}
+     ${row('poa','Power of attorney','Only if the signer isn’t a director',false,'poder_notarial.pdf')}
+     ${row('own','Ownership evidence','Shareholder register or notarial statement',false,'registro_socios.pdf')}`,
+    `<div class="cta-wrap"><button class="cta-btn" ${D.deeds?'':'disabled'} onclick="next()">Continue</button></div>`); } });
+
+S.idvStart = () => ({ stage:'Identity', title:'Identity verification: hand off to mobile', who:['jifiti','idv'],
+  note:'The signer’s powers are confirmed first. Identity verification then moves to the phone with a QR code, where document capture and selfie work best. The desktop session waits and updates on its own.',
+  html: () => wrap(WEB(), idvDesk(false)) });
+
+S.mId = () => ({ stage:'Identity', title:'On the phone: scan ID', who:['idv'],
+  note:'The QR opens a secure mobile session tied to the desktop application. Document capture with edge detection, plus authenticity and data checks.',
+  html: () => wrap(WEB(false), idvDesk(true), '', PHONE(`${STATUS(true).replace('class="status-bar dark"','class="status-bar dark" style="position:absolute;top:0;left:0;right:0;height:36px;padding:0 22px;font-size:13px"')}<div class="mtop"><b>Front of your ID</b><span>Place your DNI inside the frame</span></div>
+     <div class="mcam"><div class="id-frame"><div class="hdr">ESPAÑA · DNI</div><div class="photo"></div><div class="ln" style="top:36px;width:130px"></div><div class="ln" style="top:54px;width:100px"></div><div class="ln" style="top:72px;width:140px"></div><div class="ln" style="top:90px;width:80px"></div></div>
+      <div class="shutter" onclick="next()"></div><div class="cam-cap">Tap to capture</div></div>`)) });
+
+S.mSelfie = () => ({ stage:'Identity', title:'On the phone: selfie', who:['idv'],
+  note:'Liveness check and face match against the ID photo.',
+  html: () => wrap(WEB(false), idvDesk(true), '', PHONE(`${STATUS(true).replace('class="status-bar dark"','class="status-bar dark" style="position:absolute;top:0;left:0;right:0;height:36px;padding:0 22px;font-size:13px"')}<div class="mtop"><b>Take a selfie</b><span>Center your face in the oval</span></div>
+     <div class="mcam"><div class="selfie-wrap"><img src="${IMG.selfie}" alt=""></div><div class="shutter" onclick="next()"></div><div class="cam-cap">Tap to capture</div></div>`)) });
+
+S.mDone = () => ({ stage:'Identity', title:'On the phone: done', who:['idv','jifiti'],
+  note:'The phone confirms success and sends the supplier back to the computer. The desktop page picks up the result automatically.',
+  html: () => wrap(WEB(false), idvDesk(true), '', PHONE(`<div class="mlogo">BBVA</div>
+     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 22px;text-align:center"><div class="big-check" style="margin:0 auto 14px;width:62px;height:62px">${ICON.check}</div>
+      <div style="font-size:19px;font-weight:900">You’re verified</div><div class="note-sm" style="margin-top:6px;font-size:13px">Go back to your computer to continue. You can close this page.</div></div>
+     <div style="padding:0 16px 24px"><button class="cta-btn" onclick="next()" style="height:44px">Done</button></div>`, true)) });
+
+S.idvDone = () => ({ stage:'Identity', title:'Back on desktop: identity verified', who:['idv','jifiti'],
+  note:'The desktop session updated on its own when the phone finished. Evidence is stored for the onboarding file sent to BBVA.',
+  html: () => wrap(WEB(false),
+    `<div class="big-check">${ICON.check}</div><div class="h-title" style="padding-top:0">Identity verified</div><div class="h-sub">We received your verification from your phone. Next, we’ll invite the other owners.</div>
+     <div class="sum"><div><span>Document</span><span>DNI · valid</span></div><div><span>Selfie</span><span>Match</span></div><div><span>Signing powers</span><span>Confirmed</span></div></div>`,
+    cta('Continue')) });
+
+function inviteBody(sent) {
+  return `<div class="h-title">Invite the other owners</div><div class="h-sub">We’ll email each owner a secure link to verify their identity. You can carry on in the meantime.</div>
+   <div class="ubo"><div class="ubo-hd"><div class="av">JR</div><div><b>Javier Ruiz Ortega${sent?'<span class="ubo-tag ok">INVITATION SENT</span>':''}</b><span class="s">Shareholder</span></div><div class="pct">40%</div></div>
+    <div class="ubo-bd">${field('Full name','Javier Ruiz Ortega','ro')}${sent?`${field('Email','javier.ruiz@email.com','ro')}${field('Mobile','+34 655 210 873','ro')}`:`<div class="row2">${fillField('Email','javier.ruiz@email.com')}${fillField('Mobile','+34 655 210 873')}</div>`}</div></div>`;
+}
+S.invite = () => ({ stage:'Identity', title:'Invite other owners', who:['jifiti'],
+  note:'The applicant only gives each other owner’s name, email and mobile. Each owner gets their own link to enter their details and complete ID verification. This runs in parallel and doesn’t block the applicant.',
+  html: () => wrap(WEB(), inviteBody(false), cta('Send invitation', { gate:true })) });
+
+S.inviteMail = () => ({ stage:'Identity', title:'Owner receives the invitation', who:['jifiti','idv'],
+  note:'Javier opens the email on his phone, enters his own details (date of birth, ID, address) and completes ID scan and selfie. His status updates in the onboarding file. Screening runs on him once he’s done.',
+  html: () => wrap(WEB(false), inviteBody(true), cta('Continue'), PHONE(`<div class="mail-hd">From: BBVA Confirming<br>To: javier.ruiz@email.com<b>Verify your identity for Talleres Ebro S.L.</b></div>
+     <div class="mail-bd"><div class="pb-logo-text" style="font-size:18px;margin-bottom:10px">BBVA</div>Hi Javier,<br><br>Lucía Martín Gil added you as an owner of <b>Talleres Ebro S.L.</b> as part of setting up early payment in BBVA Confirming.<br><br>Please confirm your details and verify your identity. It takes about 2 minutes.
+      <div class="btn" onclick="next()">Verify my identity</div><div class="note-sm">This link expires in 7 days.</div></div>`, true)) });
+
+S.iban = () => ({ stage:'Payout', title:'Payout account', who:['jifiti','vop'],
+  note:'Any SEPA account in the business’s name. The IBAN and holder name are checked with Verification of Payee, mandatory for euro SEPA payments since 9 October 2025.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">Where should we send your money?</div><div class="h-sub">Any account in your business’s name. It doesn’t need to be at BBVA.</div>
+     <div class="pad">${fillField('IBAN','ES91 2100 0418 4502 0005 1332')}${field('Account holder','Talleres Ebro S.L.','ro')}</div>`,
+    cta('Verify account', { gate:true })) });
+
+S.ibanOk = () => ({ stage:'Payout', title:'Account confirmed', who:['vop'],
+  note:'Exact name match. On a close match or no match, the supplier corrects the IBAN or uploads an account ownership certificate for manual review.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">Account confirmed</div><div class="h-sub">The account holder matches your business.</div>
+     <div class="verified">${ICON.check}Name matches · Verification of Payee</div>
+     <div class="sum"><div><span>IBAN</span><span>ES91 •••• 1332</span></div><div><span>Holder</span><span>Talleres Ebro S.L.</span></div></div>`,
+    cta('Continue')) });
+
+S.checks = () => ({ stage:'Checks', title:'Compliance checks', who:['aml'], auto:2800,
+  note:'Sanctions, PEP and adverse media screening on the company and the applicant now, and on each invited owner as soon as they finish. If an alert comes up, the supplier sees a neutral message to finish at a branch, never the reason.',
+  html: () => wrap(WEB(false),
+    `<div class="loader-wrap" style="min-height:440px"><div class="spinner"></div><h2>Running a few quick checks</h2><div class="note-sm">Please keep this page open.</div>
+     <div class="loader-steps">${['Business status','Sanctions lists','Politically exposed persons','Adverse media'].map((s,i)=>`<div data-step="${i}">${ICON.check}${s}</div>`).join('')}</div></div>`) });
+
+S.agreement = () => ({ stage:'Agreement', title:'Early payment agreement', who:['jifiti','bank'],
+  note:'The agreement is generated from BBVA’s template with the supplier, invoices, pricing and verified IBAN. Signing does not open a BBVA account.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">Review your agreement</div>
+     <div class="sum"><div><span>Invoices</span><span>${selCount()} · ${eur(selTotal())}</span></div><div><span>Early payment fee</span><span>[BANK PRICING]</span></div><div><span>You receive</span><span>[NET AMOUNT]</span></div><div><span>Paid to</span><span>ES91 •••• 1332</span></div></div>
+     <div class="agreement-preview"><div class="ttl">EARLY PAYMENT AGREEMENT · CONFIRMING</div>${[100,92,96,70,98,88,94,60,97,85,90].map(w=>`<div class="ln" style="width:${w}%"></div>`).join('')}<div class="fade"></div></div>
+     <div class="pad">${chk('I’ve read and accept the <a>early payment agreement</a>.')}${chk('I’m authorized to sign for Talleres Ebro S.L.')}</div>`,
+    cta('Review and sign', { gate:true })) });
+
+S.esign = () => ({ stage:'Agreement', title:'eSignature', who:['jifiti','esign'],
+  note:'Embedded signing from the bank’s eSignature provider (for example DocuSign), inside the journey. The signed PDF, certificate and audit trail are returned to Jifiti and added to the onboarding file.',
+  html: () => wrap(WEB(),
+    `<div class="h-title">Sign your agreement</div><div class="h-sub">Review the document and sign where indicated.</div>
+     <div class="esg"><div class="esg-bar">${ICON.doc.replace('<svg','<svg style="width:15px;height:15px"')}Early payment agreement.pdf<span class="pg">Page 3 of 3</span><button class="esg-fin" ${ST.signed?'':'disabled'} onclick="next()">Finish</button></div>
+      <div class="esg-page"><div class="esg-doc"><div class="ttl">EARLY PAYMENT AGREEMENT · CONFIRMING</div>${[96,90,98,72,94,60].map(w=>`<div class="ln" style="width:${w}%"></div>`).join('')}
+       <div class="sig-area"><div style="flex:1"><div class="sig-box">${ST.signed?'<span class="sig-script">Lucía Martín Gil</span>':'<button class="sign-flag" onclick="signNow()">SIGN</button>'}</div><div class="sig-lbl">Lucía Martín Gil · For Talleres Ebro S.L.</div></div>
+        <div style="width:130px"><div class="sig-box" style="font-size:13px;font-weight:700">${ST.signed?'15 Oct 2026':''}</div><div class="sig-lbl">Date</div></div></div></div></div>
+      <div class="esg-foot">${ICON.lock}Secured by your eSignature provider · eIDAS compliant</div></div>
+     <div class="center note-sm" style="margin:10px 0 16px">${ST.signed?'Signed. Click <b>Finish</b> to complete.':'Click <b>SIGN</b> to add your signature.'}</div>`) });
+
+S.done = () => ({ stage:'Activation', title:'Onboarding complete', who:['jifiti','bank'],
+  note:'Jifiti sends BBVA a webhook with the full onboarding file: business data with sources, owners, ID results, screening, verified IBAN and the signed agreement. BBVA enables the supplier and pays early.',
+  html: () => wrap(WEB(false),
+    `<div class="big-check">${ICON.check}</div><div class="h-title">You’re all set</div><div class="h-sub">Early payment for ${selCount()} ${invWord()} has been requested.</div>
+     <div class="sum"><div><span>Amount</span><span>${eur(selTotal())}</span></div><div><span>Paid to</span><span>ES91 •••• 1332</span></div><div><span>Expected</span><span>[VALUE DATE]</span></div><div><span>Javier Ruiz Ortega</span><span style="color:#8a5a00">Verification pending</span></div></div>
+     <div class="banner-info" style="background:#fff1d6;color:#7a5200">We’ll release the payment once Javier completes his verification. We’ve sent him a reminder.</div>
+     <div class="banner-info"><b>Want payouts even faster?</b> Open a BBVA business account. Most of your details are already done.</div>`,
+    cta('Back to invoices')) });
+
+S.portalAfter = () => ({ stage:'Activation', title:'Back in the portal', who:['bank'],
+  note:'The supplier is now enabled for early payment. Future confirmed invoices can be paid early in one click, with no new onboarding.',
+  html: () => wrap('WIDE',
+    `<div class="ssp-head"><div class="l">Early payment requested</div><div class="v">${eur(selTotal())}</div><div class="s">${selCount()} ${invWord()} · Grupo Meridia Retail S.A.</div></div>
+     <div class="ssp-sec">Invoices</div>
+     ${INVOICES.map(([n,d,a],i)=>`<div class="tx"><div class="l"><b>${n}</b><span>${d}</span></div><div class="r"><b>${eur(a)}</b>${ST.sel[i]?'<span class="pill blue">EARLY PAYMENT</span>':'<span class="pill grey">CONFIRMED</span>'}</div></div>`).join('')}
+     <div class="banner-info">Early payment is active. Other confirmed invoices can be paid early in one tap.</div>`) });
+
+/* ═════════ flow ═════════ */
+function buildFlow() {
+  return [S.portal(), S.welcome(), S.taxId(), S.lookup(), S.company(), S.owners(), S.personal(), S.otp(), S.idvStart(), S.mId(), S.mSelfie(), S.mDone(), S.idvDone(), S.invite(), S.inviteMail(), S.docs(), S.iban(), S.ibanOk(), S.checks(), S.agreement(), S.esign(), S.done(), S.portalAfter()];
+}
+
+/* ═════════ state + navigation ═════════ */
+let FLOW = [], CUR = 0, timer = null;
+
+function setFlavor(i) {
+  const f = FLAVORS[i];
+  FLOW = buildFlow();
+  document.querySelectorAll('.fl').forEach((el,k)=>el.classList.toggle('active', k===i));
+  document.getElementById('flowTitle').innerHTML = `${f.name}<small>${f.who}</small>`;
+  document.getElementById('totIdx').textContent = FLOW.length;
+  buildStrip(); go(0);
+}
+function buildStrip() {
+  const strip = document.getElementById('strip'); strip.innerHTML = '';
+  let grp = null, last = null;
+  FLOW.forEach((s,k)=>{
+    if (s.stage !== last) { grp = document.createElement('div'); grp.className='grp'; grp.innerHTML = `<span class="grp-lbl">${s.stage}</span>`; strip.appendChild(grp); last = s.stage; }
+    const d = document.createElement('div'); d.className='dot'; d.textContent = k+1; d.title = s.title; d.onclick = ()=>go(k); grp.appendChild(d);
+  });
+}
+function render() {
+  clearTimeout(timer);
+  const s = FLOW[CUR];
+  document.getElementById('phone').innerHTML = s.html();
+  document.getElementById('curIdx').textContent = CUR+1;
+  document.getElementById('prevBtn').disabled = CUR===0;
+  document.getElementById('nextBtn').disabled = CUR===FLOW.length-1;
+  document.getElementById('nStage').textContent = s.stage.toUpperCase() + ' · STEP ' + (CUR+1);
+  document.getElementById('nTitle').textContent = s.title;
+  document.getElementById('nWho').innerHTML = s.who.map(w=>`<span class="chip"><i style="background:${P[w].c}"></i>${P[w].n}</span>`).join('');
+  document.getElementById('nText').textContent = s.note;
+  document.querySelectorAll('.dot').forEach((d,k)=>d.classList.toggle('active', k===CUR));
+  const ad = document.querySelector('.dot.active'); if (ad) ad.scrollIntoView({ block:'nearest', inline:'center' });
+  if (s.auto) {
+    const steps = document.querySelectorAll('.loader-steps div'); const per = s.auto / (steps.length+1);
+    steps.forEach((el,k)=> setTimeout(()=>{ if (FLOW[CUR]===s) el.classList.add('done'); }, per*(k+1)));
+    timer = setTimeout(()=>{ if (FLOW[CUR]===s) next(); }, s.auto);
+  }
+}
+function go(i) { if (i<0 || i>=FLOW.length) return; CUR = i; render(); }
+function next() { go(CUR+1); }
+function prev() { go(CUR-1); }
+
+function upDoc(k) { if (k==='all') { ST.docs.deeds = true; ST.docs.own = true; } else ST.docs[k] = true; render(); }
+function signNow() { ST.signed = true; render(); }
+function segPick(e) { const d = e.target.closest('.seg > div'); if (!d) return; d.parentElement.querySelectorAll(':scope > div').forEach(x=>x.classList.remove('on')); d.classList.add('on'); ST.uboMethod = d.dataset.v; }
+function pickMe(k) { ST.me = k; render(); }
+function toggleInv(i) { ST.sel[i] = !ST.sel[i]; render(); }
+function selAll() { const all = selCount()===INVOICES.length; ST.sel = ST.sel.map(()=>!all); render(); }
+function toggleEdit(el) {
+  const box = el.closest('[data-edit-box]'); const on = !box.classList.contains('editing');
+  box.classList.toggle('editing', on);
+  box.querySelectorAll('.field.ed').forEach(f=>{ const i=f.querySelector('input'); if (f.closest('.editv')) return; f.classList.toggle('ro', !on); i.readOnly = !on; });
+  el.textContent = on ? 'Done' : 'Edit';
+  const first = box.querySelector(on ? '.field.ed:not(.ro) input, .editv input' : 'x'); if (first) first.focus();
+}
+function toggleCheck(el) { el.classList.toggle('checked'); gateFill(el.closest('.screen')); }
+function fillIn(el) {
+  const scr = el.closest('.screen');
+  if (el.classList.contains('field')) { const box = el.closest('.ubo, .grpfill'); const grp = box ? [...box.querySelectorAll('.field.fill')] : [el]; grp.forEach(f=>{ const i = f.querySelector('input'); if (!i.value) i.value = f.dataset.demo; f.classList.remove('empty'); }); }
+  scr.querySelectorAll('.otp-d').forEach(d=>{ if (el.classList.contains('otp-wrap') && !d.textContent) d.textContent = d.dataset.demo; });
+  gateFill(scr);
+}
+function gateFill(scr) {
+  const fills = scr.querySelectorAll('.field.fill input'); const req = scr.querySelectorAll('.check-row.req');
+  const otps = scr.querySelectorAll('.otp-d');
+  const ok = [...fills].every(i=>i.value) && [...otps].every(d=>d.textContent) && [...req].every(r=>r.classList.contains('checked'));
+  scr.querySelectorAll('[data-gate]').forEach(b=>b.disabled = !ok);
+}
+function toggleNotes() { document.body.classList.toggle('notes-off'); document.getElementById('notesBtn').textContent = document.body.classList.contains('notes-off') ? 'Show notes' : 'Hide notes'; }
+
+const flEl = document.getElementById('flavors');
+FLAVORS.forEach((f,i)=>{
+  const d = document.createElement('div'); d.className='fl';
+  d.innerHTML = `<span class="n">${i+1}</span><div class="t">${f.name}</div><div class="d"><b style="color:#fff">${f.who}.</b> ${f.short}</div><div class="cfg">${f.cfg.map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('')}</div>`;
+  d.onclick = ()=>setFlavor(i); flEl.appendChild(d);
+});
+
+document.getElementById('prevBtn').onclick = prev;
+document.getElementById('nextBtn').onclick = next;
+document.addEventListener('keydown', e=>{
+  if (['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key==='ArrowRight') { e.preventDefault(); next(); }
+  if (e.key==='ArrowLeft') { e.preventDefault(); prev(); }
+  if (e.key==='n' || e.key==='N') toggleNotes();
+});
+setFlavor(0);
+</script>
+<script>
+(function(){
+  function fitPhone(){
+    var st=document.querySelector('.stage'), fit=document.getElementById('phoneFit'), ph=document.getElementById('phoneBox');
+    if(!st||!fit||!ph) return;
+    var cs=getComputedStyle(st);
+    var h=st.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+    var w=st.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+    var k=Math.min(1,h/740,w/900); if(k<=0) k=1;
+    ph.style.transform='scale('+k+')';
+    fit.style.width=(900*k)+'px'; fit.style.height=(740*k)+'px';
+  }
+  window.addEventListener('resize',fitPhone); window.addEventListener('load',fitPhone);
+  document.addEventListener('DOMContentLoaded',fitPhone); setTimeout(fitPhone,50);
+})();
+</script>
+</body>
+</html>
